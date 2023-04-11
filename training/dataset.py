@@ -48,6 +48,7 @@ class Dataset(torch.utils.data.Dataset):
             self._raw_idx = np.sort(self._raw_idx[:max_size])
 
         # Apply xflip.
+        #NOTE pretty much doubles the length of every epoch by inserting x-flip deterministically to every sample once 
         self._xflip = np.zeros(self._raw_idx.size, dtype=np.uint8)
         if xflip:
             self._raw_idx = np.tile(self._raw_idx, 2)
@@ -184,7 +185,7 @@ class ImageFolderDataset(Dataset):
             raise IOError('Path must point to a directory or zip')
 
         PIL.Image.init()
-        self._image_fnames = sorted(fname for fname in self._all_fnames if self._file_ext(fname) in PIL.Image.EXTENSION)
+        self._image_fnames = sorted(fname for fname in self._all_fnames if self._file_ext(fname) in PIL.Image.EXTENSION) #NOTE isolates any file with a valid image file extension
         if len(self._image_fnames) == 0:
             raise IOError('No image files found in the specified path')
 
@@ -242,7 +243,7 @@ class ImageFolderDataset(Dataset):
         if labels is None:
             return None
         labels = dict(labels)
-        labels = [labels[fname.replace('\\', '/')] for fname in self._image_fnames]
+        labels = [labels[fname.replace('\\', '/')] for fname in self._image_fnames] #NOTE labels are now in same order as fnames
         labels = np.array(labels)
         labels = labels.astype({1: np.int64, 2: np.float32}[labels.ndim])
         return labels
