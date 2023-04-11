@@ -40,6 +40,7 @@ def parse_int_list(s):
 
 @click.command()
 
+#TODO add option for classifier-free guidance dropout probability
 # Main options.
 @click.option('--outdir',        help='Where to save the results', metavar='DIR',                   type=str, required=True)
 @click.option('--data',          help='Path to the dataset', metavar='ZIP|DIR',                     type=str, required=True)
@@ -125,6 +126,8 @@ def main(**kwargs):
         c.network_kwargs.update(model_type='DhariwalUNet', model_channels=192, channel_mult=[1,2,3,4])
 
     # Preconditioning & loss function.
+    #NOTE Pre-Conditioning just reparameterises network output to be exactly \hat{x}_0
+    #   and the loss takes in all the raw info and does the forward pass 4 u
     if opts.precond == 'vp':
         c.network_kwargs.class_name = 'training.networks.VPPrecond'
         c.loss_kwargs.class_name = 'training.loss.VPLoss'
@@ -144,12 +147,12 @@ def main(**kwargs):
     if opts.augment:
         c.augment_kwargs = dnnlib.EasyDict(class_name='training.augment.AugmentPipe', p=opts.augment)
         c.augment_kwargs.update(xflip=1e8, yflip=1, scale=1, rotate_frac=1, aniso=1, translate_frac=1)
-        c.network_kwargs.augment_dim = 9
-    c.network_kwargs.update(dropout=opts.dropout, use_fp16=opts.fp16)
+        c.network_kwargs.augment_dim = 9 #NOTE look at how many [w] we add to labels in augment.py to get this number
+    c.network_kwargs.update(dropout=opts.dropout, use_fp16=opts.fp16) #TODO add label_dropout option here?
 
     # Training options.
-    c.total_kimg = max(int(opts.duration * 1000), 1)
-    c.ema_halflife_kimg = int(opts.ema * 1000)
+    c.total_kimg = max(int(opts.duration * 1000), 1) #NOTE Training duration, measured in thousands of training images.
+    c.ema_halflife_kimg = int(opts.ema * 1000) #NOTE Half-life of the exponential moving average (EMA) of model weights.
     c.update(batch_size=opts.batch, batch_gpu=opts.batch_gpu)
     c.update(loss_scaling=opts.ls, cudnn_benchmark=opts.bench)
     c.update(kimg_per_tick=opts.tick, snapshot_ticks=opts.snap, state_dump_ticks=opts.dump)
