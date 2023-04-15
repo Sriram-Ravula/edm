@@ -95,8 +95,9 @@ def main(**kwargs):
 
     # Initialize config dict.
     #NOTE easydict is just a dictionary with attributes instead of keys
+    #NOTE changed from ImageFolderDataset -> NumpyFolderDataset
     c = dnnlib.EasyDict()
-    c.dataset_kwargs = dnnlib.EasyDict(class_name='training.dataset.ImageFolderDataset', path=opts.data, use_labels=opts.cond, xflip=opts.xflip, cache=opts.cache)
+    c.dataset_kwargs = dnnlib.EasyDict(class_name='training.dataset.NumpyFolderDataset', path=opts.data, use_labels=opts.cond, xflip=opts.xflip, cache=opts.cache)
     c.data_loader_kwargs = dnnlib.EasyDict(pin_memory=True, num_workers=opts.workers, prefetch_factor=2)
     c.network_kwargs = dnnlib.EasyDict()
     c.loss_kwargs = dnnlib.EasyDict()
@@ -106,7 +107,7 @@ def main(**kwargs):
     try:
         dataset_obj = dnnlib.util.construct_class_by_name(**c.dataset_kwargs) #NOTE weird way to construct a dataset but ok
         dataset_name = dataset_obj.name
-        c.dataset_kwargs.resolution = dataset_obj.resolution # be explicit about dataset resolution NOTE calculated for you in ImageFolderDataset constructor
+        c.dataset_kwargs.resolution = dataset_obj.resolution # be explicit about dataset resolution NOTE calculated for you in Dataset constructor
         c.dataset_kwargs.max_size = len(dataset_obj) # be explicit about dataset size
         if opts.cond and not dataset_obj.has_labels:
             raise click.ClickException('--cond=True requires labels specified in dataset.json')
