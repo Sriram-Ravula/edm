@@ -436,9 +436,9 @@ class DhariwalUNet(torch.nn.Module):
 
     def forward(self, x, noise_labels, class_labels, augment_labels=None):
         # Mapping.
-        #NOTE(1) t_emb = embedding(timestep), aug_emb = linear(embedding(aug)) (augmentation embedding layer is not part of net)
+        #NOTE(1) t_emb = embedding(timestep), aug_emb = linear(onehot(aug))
         #    (2) t+aug_emb = linear(silu(linear(t_emb + aug_emb)))
-        #    (3) class_emb = linear(embedding(class)) (plus random dropout for classifier-free guidance)
+        #    (3) class_emb = linear(onehot(class)) (plus random dropout for classifier-free guidance)
         #    (4) final_emb = silu(t+aug_emb + class_emb)   
         emb = self.map_noise(noise_labels)
         if self.map_augment is not None and augment_labels is not None:
