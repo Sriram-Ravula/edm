@@ -368,6 +368,7 @@ class SongUNet(torch.nn.Module):
 # original implementation by Dhariwal and Nichol, available at
 # https://github.com/openai/guided-diffusion
 
+#NOTE changing the default params to match the ImageNet 256 from the paper
 @persistence.persistent_class
 class DhariwalUNet(torch.nn.Module):
     def __init__(self,
@@ -377,13 +378,13 @@ class DhariwalUNet(torch.nn.Module):
         label_dim           = 0,            # Number of class labels, 0 = unconditional.
         augment_dim         = 0,            # Augmentation label dimensionality, 0 = no augmentation.
 
-        model_channels      = 192,          # Base multiplier for the number of channels.
-        channel_mult        = [1,2,3,4],    # Per-resolution multipliers for the number of channels.
+        model_channels      = 256,          # Base multiplier for the number of channels. NOTE increased from 192->256
+        channel_mult        = [1,1,2,2,4,4],    # Per-resolution multipliers for the number of channels. NOTE updated from 4->6
         channel_mult_emb    = 4,            # Multiplier for the dimensionality of the embedding vector.
-        num_blocks          = 3,            # Number of residual blocks per resolution.
+        num_blocks          = 2,            # Number of residual blocks per resolution. #NOTE decreased 3->2
         attn_resolutions    = [32,16,8],    # List of resolutions with self-attention.
-        dropout             = 0.10,         # List of resolutions with self-attention.
-        label_dropout       = 0,            # Dropout probability of class labels for classifier-free guidance.
+        dropout             = 0.0,          # Probability of feature dropout #NOTE decreased 0.1->0.0
+        label_dropout       = 0.1,          # Dropout probability of class labels for classifier-free guidance. NOTE increased 0.0->0.1
     ):
         super().__init__()
         self.label_dropout = label_dropout
