@@ -124,7 +124,8 @@ def main(**kwargs):
         c.network_kwargs.update(channel_mult_noise=2, resample_filter=[1,3,3,1], model_channels=128, channel_mult=[2,2,2])
     else:
         assert opts.arch == 'adm'
-        c.network_kwargs.update(model_type='DhariwalUNet', model_channels=192, channel_mult=[1,2,3,4])
+        # c.network_kwargs.update(model_type='DhariwalUNet', model_channels=192, channel_mult=[1,2,3,4])
+        c.network_kwargs.update(model_type='DhariwalUNet', model_channels=256, channel_mult=[1,1,2,2,4,4]) #NOTE changing to ImageNet default params from paper
 
     # Preconditioning & loss function.
     #NOTE Pre-Conditioning just reparameterises network output to be exactly \hat{x}_0
@@ -147,9 +148,11 @@ def main(**kwargs):
         c.network_kwargs.channel_mult = opts.cres
     if opts.augment:
         c.augment_kwargs = dnnlib.EasyDict(class_name='training.augment.AugmentPipe', p=opts.augment)
-        c.augment_kwargs.update(xflip=1e8, yflip=1, scale=1, rotate_frac=1, aniso=1, translate_frac=1)
-        c.network_kwargs.augment_dim = 9 #NOTE look at how many [w] we add to labels in augment.py to get this number
-    c.network_kwargs.update(dropout=opts.dropout, use_fp16=opts.fp16) #TODO add label_dropout option here?
+        # c.augment_kwargs.update(xflip=1e8, yflip=1, scale=1, rotate_frac=1, aniso=1, translate_frac=1)
+        # c.network_kwargs.augment_dim = 9 #NOTE look at how many [w] we add to labels in augment.py to get this number
+        c.augment_kwargs.update(xflip=1e8, yflip=1, scale=1, rotate_frac=1, translate_frac=1) #NOTE removed anisotropic scaling
+        c.network_kwargs.augment_dim = 7
+    c.network_kwargs.update(dropout=opts.dropout, use_fp16=opts.fp16, label_dropout=0.1) #NOTE added label_dropout=0.1
 
     # Training options.
     c.total_kimg = max(int(opts.duration * 1000), 1) #NOTE Training duration, measured in thousands of training images.
