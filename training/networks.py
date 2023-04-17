@@ -382,7 +382,7 @@ class DhariwalUNet(torch.nn.Module):
         channel_mult        = [1,1,2,2,4,4],    # Per-resolution multipliers for the number of channels. NOTE updated from 4->6
         channel_mult_emb    = 4,            # Multiplier for the dimensionality of the embedding vector.
         num_blocks          = 2,            # Number of residual blocks per resolution. #NOTE decreased 3->2
-        attn_resolutions    = [32,16,8],    # List of resolutions with self-attention.
+        attn_resolutions    = [48,24,12],    # List of resolutions with self-attention. #NOTE changed [32,16,8]->[48,24,12]
         dropout             = 0.1,          # Probability of feature dropout
         label_dropout       = 0.1,          # Dropout probability of class labels for classifier-free guidance. NOTE increased 0.0->0.1
     ):
