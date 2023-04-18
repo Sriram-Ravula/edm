@@ -235,12 +235,12 @@ class SongUNet(torch.nn.Module):
         augment_dim         = 0,            # Augmentation label dimensionality, 0 = no augmentation.
 
         model_channels      = 128,          # Base multiplier for the number of channels.
-        channel_mult        = [1,2,2,2],    # Per-resolution multipliers for the number of channels.
+        channel_mult        = [1,1,2,2,2,2,2],    # Per-resolution multipliers for the number of channels. NOTE changed-> FFHQ Song config
         channel_mult_emb    = 4,            # Multiplier for the dimensionality of the embedding vector.
-        num_blocks          = 4,            # Number of residual blocks per resolution.
-        attn_resolutions    = [16],         # List of resolutions with self-attention.
-        dropout             = 0.10,         # Dropout probability of intermediate activations.
-        label_dropout       = 0,            # Dropout probability of class labels for classifier-free guidance.
+        num_blocks          = 2,            # Number of residual blocks per resolution. #NOTE 4->2
+        attn_resolutions    = [12],         # List of resolutions with self-attention. NOTE [16]->[12]
+        dropout             = 0.0,          # Dropout probability of intermediate activations. NOTE 0.1->0.0
+        label_dropout       = 0.1,            # Dropout probability of class labels for classifier-free guidance. #NOTE 0->0.1
 
         embedding_type      = 'positional', # Timestep embedding type: 'positional' for DDPM++, 'fourier' for NCSN++.
         channel_mult_noise  = 1,            # Timestep embedding size: 1 for DDPM++, 2 for NCSN++.
@@ -378,12 +378,12 @@ class DhariwalUNet(torch.nn.Module):
         label_dim           = 0,            # Number of class labels, 0 = unconditional.
         augment_dim         = 0,            # Augmentation label dimensionality, 0 = no augmentation.
 
-        model_channels      = 256,          # Base multiplier for the number of channels. NOTE increased from 192->256
+        model_channels      = 128,          # Base multiplier for the number of channels. NOTE decreased from 192->128
         channel_mult        = [1,1,2,2,4,4],    # Per-resolution multipliers for the number of channels. NOTE updated from 4->6
         channel_mult_emb    = 4,            # Multiplier for the dimensionality of the embedding vector.
         num_blocks          = 2,            # Number of residual blocks per resolution. #NOTE decreased 3->2
         attn_resolutions    = [24,12],    # List of resolutions with self-attention. #NOTE changed [32,16,8]->[24,12]
-        dropout             = 0.1,          # Probability of feature dropout
+        dropout             = 0.0,          # Probability of feature dropout #NOTE 0.1->0.0
         label_dropout       = 0.1,          # Dropout probability of class labels for classifier-free guidance. NOTE increased 0.0->0.1
     ):
         super().__init__()
