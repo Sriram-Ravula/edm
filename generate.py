@@ -18,6 +18,55 @@ import torch
 import PIL.Image
 import dnnlib
 from torch_utils import distributed as dist
+import json
+
+#----------------------------------------------------------------------------
+# Proposed EDM sampler (Algorithm 2) Plus Diffusion Posterior Sampling.
+# Added parameters y: the measurements, A: forward operator that acts on images, 
+#   likelihood_step_size: scalar step size of log-likelihood gradient
+
+def dps_edm_sampler(
+    net, latents, y, A, likelihood_step_size, 
+    class_labels=None, randn_like=torch.randn_like,
+    num_steps=18, sigma_min=0.002, sigma_max=80, rho=7,
+    S_churn=0, S_min=0, S_max=float('inf'), S_noise=1
+):
+    # Adjust noise levels based on what's supported by the network.
+    sigma_min = max(sigma_min, net.sigma_min)
+    sigma_max = min(sigma_max, net.sigma_max)
+
+    # Time step discretization.
+    step_indices = torch.arange(num_steps, dtype=torch.float64, device=latents.device)
+    t_steps = (sigma_max ** (1 / rho) + step_indices / (num_steps - 1) * (sigma_min ** (1 / rho) - sigma_max ** (1 / rho))) ** rho
+    t_steps = torch.cat([net.round_sigma(t_steps), torch.zeros_like(t_steps[:1])]) # t_N = 0
+
+    # Main sampling loop.
+    x_next = latents.to(torch.float64) * t_steps[0]
+    for i, (t_cur, t_next) in enumerate(zip(t_steps[:-1], t_steps[1:])): # 0, ..., N-1
+        x_cur = x_next
+
+        # Increase noise temporarily.
+        gamma = min(S_churn / num_steps, np.sqrt(2) - 1) if S_min <= t_cur <= S_max else 0
+        t_hat = net.round_sigma(t_cur + gamma * t_cur)
+        x_hat = x_cur + (t_hat ** 2 - t_cur ** 2).sqrt() * S_noise * randn_like(x_cur)
+        x_hat = x_hat.requires_grad() #starting grad tracking with the noised img
+
+        #Euler step with score of prior.
+        denoised = net(x_hat, t_hat, class_labels).to(torch.float64) #\hat{x}_0
+        d_cur = (x_hat - denoised) / t_hat
+        x_next = x_hat + (t_next - t_hat) * d_cur
+
+        #Euler step with score of likelihood
+        residual = y - A(denoised)
+        sse = torch.sum(torch.square(residual))
+        likelihood_score = torch.autograd.grad(outputs=sse, inputs=x_hat)[0]
+
+        x_next = x_next - (likelihood_step_size / sse) * likelihood_score
+        x_next = x_next.detach()
+
+        #NOTE removing second-order corrections
+
+    return x_next
 
 #----------------------------------------------------------------------------
 # Proposed EDM sampler (Algorithm 2).
@@ -267,6 +316,10 @@ def main(network_pkl, outdir, subdirs, seeds, class_idx, max_batch_size, device=
 
     # Other ranks follow.
     if dist.get_rank() == 0:
+        opts = dnnlib.EasyDict(sampler_kwargs)
+        os.makedirs(outdir, exist_ok=True)
+        with open(os.path.join(outdir, 'options.json'), 'wt') as f:
+            json.dump(opts, f, indent=2)
         torch.distributed.barrier()
 
     # Loop over batches.
