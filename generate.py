@@ -294,8 +294,9 @@ def main(network_pkl, outdir, subdirs, seeds, class_idx, max_batch_size, device=
         images = sampler_fn(net, latents, class_labels, randn_like=rnd.randn_like, **sampler_kwargs)
 
         # Save images.
-        #TODO this uses Png normalisation - change 
-        images_np = (images * 127.5 + 128).clip(0, 255).to(torch.uint8).permute(0, 2, 3, 1).cpu().numpy()
+        # images_np = (images * 127.5 + 128).clip(0, 255).to(torch.uint8).permute(0, 2, 3, 1).cpu().numpy()
+        images = torch.linalg.norm(images, dim=1, keepdim=True) #Magnitude image - range in [0, sqrt(2)]
+        images_np = (images * 255).clip(0, 255).to(torch.uint8).permute(0, 2, 3, 1).cpu().numpy()
         for seed, image_np in zip(batch_seeds, images_np):
             image_dir = os.path.join(outdir, f'{seed-seed%1000:06d}') if subdirs else outdir
             os.makedirs(image_dir, exist_ok=True)
