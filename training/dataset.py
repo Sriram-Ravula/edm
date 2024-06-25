@@ -134,8 +134,8 @@ class Dataset(torch.utils.data.Dataset):
     @property
     def resolution(self):
         assert len(self.image_shape) == 3 # CHW
-        assert self.image_shape[1] == self.image_shape[2]
-        return self.image_shape[1]
+        # assert self.image_shape[1] == self.image_shape[2]
+        return min(self.image_shape[1], self.image_shape[2])
 
     @property
     def label_shape(self):
@@ -191,8 +191,8 @@ class ImageFolderDataset(Dataset):
 
         name = os.path.splitext(os.path.basename(self._path))[0]
         raw_shape = [len(self._image_fnames)] + list(self._load_raw_image(0).shape)
-        if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
-            raise IOError('Image files do not match the specified resolution')
+        # if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
+        #     raise IOError('Image files do not match the specified resolution')
         super().__init__(name=name, raw_shape=raw_shape, **super_kwargs)
 
     @staticmethod
@@ -279,8 +279,8 @@ class NumpyFolderDataset(Dataset):
         
         name = os.path.splitext(os.path.basename(self._path))[0]
         raw_shape = [len(self._image_fnames)] + list(self._load_raw_image(0).shape)
-        if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
-            raise IOError('Image files do not match the specified resolution')
+        # if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
+        #     raise IOError('Image files do not match the specified resolution')
         super().__init__(name=name, raw_shape=raw_shape, **super_kwargs)
 
     @staticmethod

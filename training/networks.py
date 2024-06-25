@@ -263,7 +263,7 @@ class SongUNet(torch.nn.Module):
         channel_mult        = [1,1,2,2,2,2],    # Per-resolution multipliers for the number of channels. NOTE changed-> FFHQ Song config
         channel_mult_emb    = 4,            # Multiplier for the dimensionality of the embedding vector.
         num_blocks          = 2,            # Number of residual blocks per resolution. #NOTE 4->2
-        attn_resolutions    = [10],         # List of resolutions with self-attention. NOTE [16]->[10]
+        attn_resolutions    = [20],         # List of resolutions with self-attention. NOTE [16]->[10] for brains and [16]->[20] for knees
         dropout             = 0.0,          # Dropout probability of intermediate activations. NOTE 0.1->0.0
         label_dropout       = 0.1,            # Dropout probability of class labels for classifier-free guidance. #NOTE 0->0.1
 
